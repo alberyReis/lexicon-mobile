@@ -1,9 +1,6 @@
+import { AppNavigation } from "@/presentation/navigation/app-navigation";
 import { Text, View } from "react-native";
 
 export const App = () => {
-  return (
-    <View>
-      <Text>Lexicon</Text>
-    </View>
-  );
+  return <AppNavigation />;
 }
