@@ -1,4 +1,4 @@
-import { ArrowLeft, Volume2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { Typography } from '@/presentation/components/typography';
 import { APP_STRINGS } from '@/shared/constants/app-strings';
@@ -8,9 +8,6 @@ import { styles } from './styles';
 
 export const WordDetailsHeader = ({
     word,
-    phonetic,
-    partOfSpeech,
-    onPlayAudio,
     onGoBack,
 }: IWordDetailsHeaderProps) => {
     return (
@@ -23,7 +20,7 @@ export const WordDetailsHeader = ({
                 hitSlop={8}
             >
                 <ArrowLeft
-                    size={22}
+                    size={24}
                     color={COLORS.text}
                 />
             </Pressable>
@@ -31,34 +28,6 @@ export const WordDetailsHeader = ({
                 <Typography variant="heading" style={styles.word}>
                     {word}
                 </Typography>
-                <View style={styles.details}>
-                    {phonetic && (
-                        <Typography variant="subtitle" style={styles.phonetic}>
-                            {phonetic}
-                        </Typography>
-                    )}
-                    {onPlayAudio && (
-                        <Pressable
-                            style={styles.audioButton}
-                            onPress={onPlayAudio}
-                            accessibilityRole="button"
-                            accessibilityLabel={APP_STRINGS.wordDetails.playAudio}
-                            hitSlop={8}
-                        >
-                            <Volume2
-                                size={18}
-                                color={COLORS.text}
-                            />
-                        </Pressable>
-                    )}
-                </View>
-                {partOfSpeech && (
-                    <View style={styles.partOfSpeechContainer}>
-                        <Typography variant="label">
-                            {partOfSpeech}
-                        </Typography>
-                    </View>
-                )}
             </View>
         </View>
     );

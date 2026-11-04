@@ -43,7 +43,6 @@ export const WordDetailsScreen = () => {
                         <Typography variant="title">
                              {APP_STRINGS.wordDetails.loadError}
                         </Typography>
-
                         <Typography variant="subtitle">
                             {APP_STRINGS.wordDetails.retry}
                         </Typography>

@@ -12,11 +12,10 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.primary,
         paddingHorizontal: widthPixel(16),
-        paddingVertical: heightPixel(14),
+        paddingVertical: heightPixel(16),
         gap: widthPixel(12),
     },
     content: {
         flex: 1,
-        gap: heightPixel(4),
     },
 });

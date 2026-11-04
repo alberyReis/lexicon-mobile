@@ -8,8 +8,6 @@ import { styles } from './styles';
 
 export const WordCard = ({
     word,
-    phonetic,
-    partOfSpeech,
     isFavorite,
     onPress,
     onToggleFavorite,
@@ -23,16 +21,6 @@ export const WordCard = ({
                 <Typography variant="title">
                     {word}
                 </Typography>
-                {phonetic && (
-                    <Typography variant="caption">
-                        {phonetic}
-                    </Typography>
-                )}
-                {partOfSpeech && (
-                    <Typography variant="label">
-                        {partOfSpeech}
-                    </Typography>
-                )}
             </Pressable>
             <Pressable
                 onPress={onToggleFavorite}
@@ -45,7 +33,7 @@ export const WordCard = ({
                 }
             >
                 <Heart
-                    size={22}
+                    size={32}
                     color={isFavorite ? COLORS.primary : COLORS.secondary}
                     fill={isFavorite ? COLORS.primary : 'transparent'}
                 />
