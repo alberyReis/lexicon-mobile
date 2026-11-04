@@ -1,12 +1,9 @@
-
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { WordDefinition } from '@/presentation/components/word-definition';
 import { WordDetailsHeader } from '@/presentation/components/word-details-header';
 import { Typography } from '@/presentation/components/typography';
 import { COLORS } from '@/shared/constants/colors';
-
 import { useWordDetailsBuilder } from './builder';
 import { styles } from './styles';
 import { APP_STRINGS } from '@/shared/constants/app-strings';
@@ -23,17 +20,16 @@ export const WordDetailsScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                <WordDetailsHeader
+            <WordDetailsHeader
                     word={wordDetails?.word ?? word}
                     phonetic={wordDetails?.phonetic}
                     partOfSpeech={wordDetails?.meanings[0]?.partOfSpeech}
                     onGoBack={handleGoBack}
                 />
-
+            <ScrollView
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {isLoading && (
                     <View style={styles.feedbackContainer}>
                         <ActivityIndicator
@@ -42,7 +38,6 @@ export const WordDetailsScreen = () => {
                         />
                     </View>
                 )}
-
                 {isError && (
                     <View style={styles.feedbackContainer}>
                         <Typography variant="title">
@@ -54,7 +49,6 @@ export const WordDetailsScreen = () => {
                         </Typography>
                     </View>
                 )}
-
                 {wordDetails && (
                     <WordDefinition
                         meanings={wordDetails.meanings}
