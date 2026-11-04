@@ -10,7 +10,7 @@ const PAGE_SIZE = 20;
 export const useHomeBuilder = () => {
     const [search, setSearch] = useState('');
     const [favorites, setFavorites] = useState<string[]>([]);
-    
+
     const navigation = useNavigation<
         NativeStackNavigationProp<IRootStackParamList>
     >();
@@ -23,11 +23,11 @@ export const useHomeBuilder = () => {
         hasNextPage,
         fetchNextPage,
     } = useInfiniteQuery({
-        queryKey: ['words'],
+        queryKey: ['words', search.trim().toLowerCase()],
         initialPageParam: null as string | null,
 
         queryFn: ({ pageParam }) =>
-            container.getWords(pageParam, PAGE_SIZE),
+            container.getWords(pageParam, PAGE_SIZE, search.trim()),
 
         getNextPageParam: (lastPage) => {
             if (lastPage.length < PAGE_SIZE) {
@@ -38,9 +38,7 @@ export const useHomeBuilder = () => {
         },
     });
 
-    const words = (data?.pages.flat() ?? []).filter((word) =>
-        word.toLowerCase().includes(search.trim().toLowerCase()),
-    );
+    const words = data?.pages.flat() ?? [];
 
     const toggleFavorite = (word: string) => {
         setFavorites((currentFavorites) =>
