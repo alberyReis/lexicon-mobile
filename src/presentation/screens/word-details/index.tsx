@@ -1,19 +1,17 @@
-import { View } from 'react-native';
-import { useRoute, type RouteProp } from '@react-navigation/native';
-import { Typography } from '@/presentation/components/typography';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WordDetailsHeader } from '@/presentation/components/word-details-header';
+import { useWordDetailsBuilder } from './builder';
 import { styles } from './styles';
-import { IWordDetailsRouteProp } from '@/types/word-details/word-details-type';
 
 export const WordDetailsScreen = () => {
-    const route = useRoute<IWordDetailsRouteProp>();
-
-    const { word } = route.params;
+    const { word, handleGoBack } = useWordDetailsBuilder();
 
     return (
-        <View style={styles.container}>
-            <Typography variant="heading">
-                {word}
-            </Typography>
-        </View>
+        <SafeAreaView style={styles.container}>
+            <WordDetailsHeader
+                word={word}
+                onGoBack={handleGoBack}
+            />
+        </SafeAreaView>
     );
 };

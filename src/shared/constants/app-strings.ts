@@ -12,6 +12,7 @@ export const APP_STRINGS = {
         home: 'Início',
         favorites: 'Favoritos',
         history: 'Histórico',
+        goBack: 'Voltar',
     },
     wordCard: {
         removeFavorite: 'Remover dos favoritos',
@@ -20,5 +21,8 @@ export const APP_STRINGS = {
     emptyState: {
         searchTitle: 'Nenhuma palavra encontrada',
         searchDescription: 'Não encontramos resultados para sua pesquisa. Tente outro termo.',
+    },
+    wordDetails: {
+        playAudio: 'Reproduzir pronúncia',
     },
 } as const;
