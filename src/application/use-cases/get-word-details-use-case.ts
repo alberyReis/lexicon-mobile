@@ -1,4 +1,4 @@
-import type { IWordRepository } from '@/infrastructure/repositories/word-repository';
+import type { IWordRepository } from '@/infrastructure/repositories/word/word-repository';
 
 export const createGetWordDetailsUseCase = (
     wordRepository: IWordRepository,

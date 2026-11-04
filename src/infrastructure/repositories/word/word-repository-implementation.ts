@@ -1,4 +1,4 @@
-import type { IWordRepository } from '@/infrastructure/repositories/word-repository';
+import type { IWordRepository } from '@/infrastructure/repositories/word/word-repository';
 import { dictionaryApiService } from '@/infrastructure/api/services/dictionary-api-service';
 import type { IWordApiResponse } from '@/types/word-details/word-api-type';
 

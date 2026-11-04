@@ -1,41 +1,44 @@
 import { useState } from 'react';
-import { IWord } from '@/types/word/word-type';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { IRootStackParamList } from '@/presentation/navigation/navigation-types';
+import { container } from '@/dependency-injection/container';
 
-const MOCK_WORDS: IWord[] = [
-    { word: 'ability', phonetic: '/əˈbɪləti/', partOfSpeech: 'noun' },
-    { word: 'achieve', phonetic: '/əˈtʃiːv/', partOfSpeech: 'verb' },
-    { word: 'beautiful', phonetic: '/ˈbjuːtɪfəl/', partOfSpeech: 'adjective' },
-    { word: 'challenge', phonetic: '/ˈtʃælɪndʒ/', partOfSpeech: 'noun' },
-    { word: 'create', phonetic: '/kriˈeɪt/', partOfSpeech: 'verb' },
-    { word: 'develop', phonetic: '/dɪˈveləp/', partOfSpeech: 'verb' },
-    { word: 'dream', phonetic: '/driːm/', partOfSpeech: 'noun' },
-    { word: 'effort', phonetic: '/ˈefərt/', partOfSpeech: 'noun' },
-    { word: 'experience', phonetic: '/ɪkˈspɪriəns/', partOfSpeech: 'noun' },
-    { word: 'freedom', phonetic: '/ˈfriːdəm/', partOfSpeech: 'noun' },
-    { word: 'growth', phonetic: '/ɡroʊθ/', partOfSpeech: 'noun' },
-    { word: 'happiness', phonetic: '/ˈhæpinəs/', partOfSpeech: 'noun' },
-    { word: 'improve', phonetic: '/ɪmˈpruːv/', partOfSpeech: 'verb' },
-    { word: 'journey', phonetic: '/ˈdʒɜːrni/', partOfSpeech: 'noun' },
-    { word: 'knowledge', phonetic: '/ˈnɑːlɪdʒ/', partOfSpeech: 'noun' },
-    { word: 'language', phonetic: '/ˈlæŋɡwɪdʒ/', partOfSpeech: 'noun' },
-    { word: 'meaning', phonetic: '/ˈmiːnɪŋ/', partOfSpeech: 'noun' },
-    { word: 'opportunity', phonetic: '/ˌɑːpərˈtuːnəti/', partOfSpeech: 'noun' },
-    { word: 'progress', phonetic: '/ˈprɑːɡres/', partOfSpeech: 'noun' },
-    { word: 'success', phonetic: '/səkˈses/', partOfSpeech: 'noun' },
-] as const;
+const PAGE_SIZE = 20;
 
 export const useHomeBuilder = () => {
     const [search, setSearch] = useState('');
     const [favorites, setFavorites] = useState<string[]>([]);
-
+    
     const navigation = useNavigation<
         NativeStackNavigationProp<IRootStackParamList>
     >();
 
-    const words = MOCK_WORDS.filter(({ word }) =>
+    const {
+        data,
+        isPending,
+        isError,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+    } = useInfiniteQuery({
+        queryKey: ['words'],
+        initialPageParam: null as string | null,
+
+        queryFn: ({ pageParam }) =>
+            container.getWords(pageParam, PAGE_SIZE),
+
+        getNextPageParam: (lastPage) => {
+            if (lastPage.length < PAGE_SIZE) {
+                return undefined;
+            }
+
+            return lastPage[lastPage.length - 1];
+        },
+    });
+
+    const words = (data?.pages.flat() ?? []).filter((word) =>
         word.toLowerCase().includes(search.trim().toLowerCase()),
     );
 
@@ -47,6 +50,12 @@ export const useHomeBuilder = () => {
         );
     };
 
+    const loadMoreWords = () => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    };
+
     return {
         search,
         setSearch,
@@ -54,5 +63,10 @@ export const useHomeBuilder = () => {
         favorites,
         toggleFavorite,
         navigation,
+        isPending,
+        isError,
+        isFetchingNextPage,
+        hasNextPage,
+        loadMoreWords,
     };
 };
