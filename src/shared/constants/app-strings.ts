@@ -17,4 +17,8 @@ export const APP_STRINGS = {
         removeFavorite: 'Remover dos favoritos',
         addFavorite: 'Adicionar aos favoritos',
     },
+    emptyState: {
+        searchTitle: 'Nenhuma palavra encontrada',
+        searchDescription: 'Não encontramos resultados para sua pesquisa. Tente outro termo.',
+    },
 } as const;

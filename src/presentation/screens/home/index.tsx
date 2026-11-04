@@ -1,5 +1,6 @@
 import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { EmptyState } from '@/presentation/components/empty-state';
 import { Header } from '@/presentation/components/header';
 import { SearchBar } from '@/presentation/components/search-bar';
 import { SectionHeader } from '@/presentation/components/section-header';
@@ -43,6 +44,12 @@ export const HomeScreen = () => {
                         onToggleFavorite={() => toggleFavorite(item.word)}
                     />
                 )}
+                ListEmptyComponent={
+                    <EmptyState
+                        title={APP_STRINGS.emptyState.searchTitle}
+                        description={APP_STRINGS.emptyState.searchDescription}
+                    />
+                }
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
             />

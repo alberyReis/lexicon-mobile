@@ -1,7 +1,7 @@
-
+import { IWord } from '@/types/word/word-type';
 import { useState } from 'react';
 
-const MOCK_WORDS = [
+const MOCK_WORDS: IWord[] = [
     { word: 'ability', phonetic: '/əˈbɪləti/', partOfSpeech: 'noun' },
     { word: 'achieve', phonetic: '/əˈtʃiːv/', partOfSpeech: 'verb' },
     { word: 'beautiful', phonetic: '/ˈbjuːtɪfəl/', partOfSpeech: 'adjective' },
