@@ -25,4 +25,10 @@ export const APP_STRINGS = {
     wordDetails: {
         playAudio: 'Reproduzir pronúncia',
     },
+    wordDefinition: {
+        definitions: 'Definições',
+        example: 'Exemplo',
+        synonyms: 'Sinônimos',
+        antonyms: 'Antônimos',
+    },
 } as const;

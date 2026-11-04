@@ -1,6 +1,11 @@
-import { AppNavigation } from "@/presentation/navigation/app-navigation";
-import { Text, View } from "react-native";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { AppNavigation } from '@/presentation/navigation/app-navigation';
+import { queryClient } from '@/shared/config/query-client';
 
 export const App = () => {
-  return <AppNavigation />;
-}
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppNavigation />
+    </QueryClientProvider>
+  );
+};
