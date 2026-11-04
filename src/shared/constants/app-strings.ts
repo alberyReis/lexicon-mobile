@@ -24,6 +24,8 @@ export const APP_STRINGS = {
     },
     wordDetails: {
         playAudio: 'Reproduzir pronúncia',
+        loadError: 'Não foi possível carregar os detalhes.',
+        retry: 'Tentar novamente',
     },
     wordDefinition: {
         definitions: 'Definições',
