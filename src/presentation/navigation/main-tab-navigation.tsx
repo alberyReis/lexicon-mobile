@@ -11,8 +11,8 @@ export const MainTabNavigation = () => {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: COLORS.secondary,
+                tabBarActiveTintColor: COLORS.secondary,
+                tabBarInactiveTintColor: COLORS.primary,
                 tabBarStyle: {
                     backgroundColor: COLORS.surface,
                 },
