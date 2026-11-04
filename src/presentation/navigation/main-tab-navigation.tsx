@@ -4,6 +4,7 @@ import { COLORS } from '@/shared/constants/colors';
 import type { IMainTabParamList } from './navigation-types';
 import { HomeScreen } from '../screens/home';
 import { APP_STRINGS } from '@/shared/constants/app-strings';
+import { FavoritesScreen } from '../screens/favorites';
 
 const Tab = createBottomTabNavigator<IMainTabParamList>();
 
@@ -31,7 +32,7 @@ export const MainTabNavigation = () => {
             />
             <Tab.Screen
                 name="Favorites"
-                component={() => null}
+                component={FavoritesScreen}
                 options={{
                     tabBarLabel: APP_STRINGS.navigation.favorites,
                     tabBarIcon: ({ color, size }) => (
