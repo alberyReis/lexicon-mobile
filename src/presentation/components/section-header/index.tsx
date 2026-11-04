@@ -6,14 +6,17 @@ import { styles } from './styles';
 export const SectionHeader = ({ title, description }: ISectionHeaderProps) => {
     return (
         <View style={styles.container}>
-            <Typography variant="title">
-                {title}
-            </Typography>
-            {description && (
-                <Typography variant="subtitle">
-                    {description}
+            <View style={styles.indicator} />
+            <View style={styles.content}>
+                <Typography variant="title" style={styles.title}>
+                    {title}
                 </Typography>
-            )}
+                {description && (
+                    <Typography variant="subtitle" style={styles.description}>
+                        {description}
+                    </Typography>
+                )}
+            </View>
         </View>
     );
 };
