@@ -1,15 +1,24 @@
+
 import { useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
+
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { IRootStackParamList } from '@/presentation/navigation/navigation-types';
+
 import { container } from '@/dependency-injection/container';
 
 const PAGE_SIZE = 20;
 
 export const useHomeBuilder = () => {
     const [search, setSearch] = useState('');
-    const [favorites, setFavorites] = useState<string[]>([]);
+
+    const queryClient = useQueryClient();
 
     const navigation = useNavigation<
         NativeStackNavigationProp<IRootStackParamList>
@@ -38,14 +47,25 @@ export const useHomeBuilder = () => {
         },
     });
 
+    const { data: favorites = [] } = useQuery({
+        queryKey: ['favorites'],
+        queryFn: container.getFavorites,
+    });
+
+    const { mutate: toggleFavoriteMutation } = useMutation({
+        mutationFn: container.toggleFavorite,
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['favorites'],
+            });
+        },
+    });
+
     const words = data?.pages.flat() ?? [];
 
     const toggleFavorite = (word: string) => {
-        setFavorites((currentFavorites) =>
-            currentFavorites.includes(word)
-                ? currentFavorites.filter((favorite) => favorite !== word)
-                : [...currentFavorites, word],
-        );
+        toggleFavoriteMutation(word);
     };
 
     const loadMoreWords = () => {
