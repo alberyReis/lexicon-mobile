@@ -7,6 +7,13 @@ export const initializeDatabase = async () => {
         );
     `);
 
+    await database.executeAsync(`
+        CREATE TABLE IF NOT EXISTS history (
+            word TEXT PRIMARY KEY,
+            viewed_at INTEGER NOT NULL
+        );
+    `);
+
     const result = await database.executeAsync<{ total: number }>(
         'SELECT COUNT(*) AS total FROM words',
     );

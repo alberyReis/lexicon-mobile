@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { container } from '@/dependency-injection/container';
@@ -12,6 +13,8 @@ export const useWordDetailsBuilder = () => {
         NativeStackNavigationProp<IRootStackParamList>
     >();
 
+    const queryClient = useQueryClient();
+
     const { word } = route.params;
 
     const {
@@ -23,6 +26,22 @@ export const useWordDetailsBuilder = () => {
         queryKey: ['word-details', word],
         queryFn: () => container.getWordDetails.execute(word),
     });
+
+    useEffect(() => {
+        const registerHistory = async () => {
+            try {
+                await container.addToHistory(word);
+
+                await queryClient.invalidateQueries({
+                    queryKey: ['history'],
+                });
+            } catch (error) {
+                console.error('[History] Erro ao registrar palavra:', error);
+            }
+        };
+
+        registerHistory();
+    }, [word, queryClient]);
 
     const handleGoBack = () => {
         navigation.goBack();

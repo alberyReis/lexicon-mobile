@@ -33,4 +33,12 @@ export const APP_STRINGS = {
         synonyms: 'Sinônimos',
         antonyms: 'Antônimos',
     },
+    history: {
+        title: 'Histórico',
+        description: 'Palavras que você consultou recentemente.',
+        emptyTitle: 'Nenhuma palavra visualizada',
+        emptyDescription: 'As palavras que você consultar aparecerão aqui.',
+        errorTitle: 'Erro ao carregar histórico',
+        errorDescription: 'Não foi possível carregar seu histórico.',
+    },
 } as const;
