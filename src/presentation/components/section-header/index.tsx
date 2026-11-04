@@ -1,17 +1,18 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Typography } from '@/presentation/components/typography';
 import type { ISectionHeaderProps } from '@/types/section-header/section-header-type';
 import { styles } from './styles';
 
 export const SectionHeader = ({ title, description }: ISectionHeaderProps) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>
+            <Typography variant="title">
                 {title}
-            </Text>
+            </Typography>
             {description && (
-                <Text style={styles.description}>
+                <Typography variant="subtitle">
                     {description}
-                </Text>
+                </Typography>
             )}
         </View>
     );

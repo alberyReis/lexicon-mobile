@@ -1,9 +1,10 @@
-import { Pressable, Text, View } from 'react-native';
 import { Heart } from 'lucide-react-native';
+import { Pressable, View } from 'react-native';
+import { Typography } from '@/presentation/components/typography';
+import { APP_STRINGS } from '@/shared/constants/app-strings';
 import { COLORS } from '@/shared/constants/colors';
 import type { IWordCardProps } from '@/types/word-card/word-card-type';
 import { styles } from './styles';
-import { APP_STRINGS } from '@/shared/constants/app-strings';
 
 export const WordCard = ({
     word,
@@ -14,25 +15,25 @@ export const WordCard = ({
     onToggleFavorite,
 }: IWordCardProps) => {
     return (
-        <Pressable
-            style={styles.container}
-            onPress={onPress}
-        >
-            <View style={styles.content}>
-                <Text style={styles.word}>
+        <View style={styles.container}>
+            <Pressable
+                style={styles.content}
+                onPress={onPress}
+            >
+                <Typography variant="title">
                     {word}
-                </Text>
+                </Typography>
                 {phonetic && (
-                    <Text style={styles.phonetic}>
+                    <Typography variant="caption">
                         {phonetic}
-                    </Text>
+                    </Typography>
                 )}
                 {partOfSpeech && (
-                    <Text style={styles.partOfSpeech}>
+                    <Typography variant="label">
                         {partOfSpeech}
-                    </Text>
+                    </Typography>
                 )}
-            </View>
+            </Pressable>
             <Pressable
                 onPress={onToggleFavorite}
                 hitSlop={10}
@@ -49,6 +50,6 @@ export const WordCard = ({
                     fill={isFavorite ? COLORS.primary : 'transparent'}
                 />
             </Pressable>
-        </Pressable>
+        </View>
     );
 };

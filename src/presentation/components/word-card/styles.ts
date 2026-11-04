@@ -19,18 +19,4 @@ export const styles = StyleSheet.create({
         flex: 1,
         gap: heightPixel(4),
     },
-    word: {
-        color: COLORS.text,
-        fontSize: widthPixel(16),
-        fontWeight: '600',
-    },
-    phonetic: {
-        color: COLORS.secondary,
-        fontSize: widthPixel(13),
-    },
-    partOfSpeech: {
-        color: COLORS.secondary,
-        fontSize: widthPixel(12),
-        fontStyle: 'italic',
-    },
 });
