@@ -7,7 +7,8 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'stretch',
         gap: widthPixel(12),
-        paddingVertical: heightPixel(4),
+        paddingTop: heightPixel(4),
+        paddingBottom: heightPixel(16),
     },
     indicator: {
         width: widthPixel(4),

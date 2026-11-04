@@ -1,6 +1,4 @@
-
 import { StyleSheet } from 'react-native';
-
 import { COLORS } from '@/shared/constants/colors';
 import { widthPixel, heightPixel } from '@/shared/utils/responsive';
 

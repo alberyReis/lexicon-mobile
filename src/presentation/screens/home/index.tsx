@@ -16,6 +16,7 @@ export const HomeScreen = () => {
         words,
         favorites,
         toggleFavorite,
+        navigation,
     } = useHomeBuilder();
 
     return (
@@ -40,7 +41,9 @@ export const HomeScreen = () => {
                         phonetic={item.phonetic}
                         partOfSpeech={item.partOfSpeech}
                         isFavorite={favorites.includes(item.word)}
-                        onPress={() => { }}
+                        onPress={() => navigation.navigate('WordDetails', {
+                            word: item.word,
+                        })}
                         onToggleFavorite={() => toggleFavorite(item.word)}
                     />
                 )}

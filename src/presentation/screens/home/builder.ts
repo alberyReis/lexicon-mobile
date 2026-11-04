@@ -1,5 +1,8 @@
-import { IWord } from '@/types/word/word-type';
 import { useState } from 'react';
+import { IWord } from '@/types/word/word-type';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { IRootStackParamList } from '@/presentation/navigation/navigation-types';
 
 const MOCK_WORDS: IWord[] = [
     { word: 'ability', phonetic: '/əˈbɪləti/', partOfSpeech: 'noun' },
@@ -28,6 +31,10 @@ export const useHomeBuilder = () => {
     const [search, setSearch] = useState('');
     const [favorites, setFavorites] = useState<string[]>([]);
 
+    const navigation = useNavigation<
+        NativeStackNavigationProp<IRootStackParamList>
+    >();
+
     const words = MOCK_WORDS.filter(({ word }) =>
         word.toLowerCase().includes(search.trim().toLowerCase()),
     );
@@ -46,5 +53,6 @@ export const useHomeBuilder = () => {
         words,
         favorites,
         toggleFavorite,
+        navigation,
     };
 };
