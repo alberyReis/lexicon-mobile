@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
     act,
+    cleanup,
     renderHook,
     waitFor,
 } from '@testing-library/react-native';
@@ -50,15 +51,17 @@ describe('useHistoryBuilder', () => {
         );
 
         await waitFor(() => {
-            expect(hook.result.current).not.toBeNull();
+            expect(hook.result.current.isPending).toBe(false);
         });
 
         await waitFor(() => {
-            expect(queryClient.getQueryState(['history'])?.fetchStatus)
-                .toBe('idle');
+            expect(
+                queryClient.getQueryState(['history'])?.fetchStatus,
+            ).toBe('idle');
 
-            expect(queryClient.getQueryState(['favorites'])?.fetchStatus)
-                .toBe('idle');
+            expect(
+                queryClient.getQueryState(['favorites'])?.fetchStatus,
+            ).toBe('idle');
         });
 
         return hook;
@@ -97,7 +100,8 @@ describe('useHistoryBuilder', () => {
         toggleFavoriteMock.mockResolvedValue(false);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        await cleanup();
         queryClient.clear();
     });
 
@@ -154,9 +158,6 @@ describe('useHistoryBuilder', () => {
 
     it('should toggle a favorite word', async () => {
         const { result } = await renderHistoryBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
         await act(async () => {
             result.current.toggleFavorite('banana');
         });
@@ -165,6 +166,9 @@ describe('useHistoryBuilder', () => {
                 'banana',
                 expect.any(Object),
             );
+        });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(false);
         });
     });
 
@@ -194,14 +198,11 @@ describe('useHistoryBuilder', () => {
         let resolveMutation!: (value: boolean) => void;
         toggleFavoriteMock.mockImplementation(
             () =>
-                new Promise<boolean>((resolve) => {
+                new Promise<boolean>(resolve => {
                     resolveMutation = resolve;
                 }),
         );
         const { result } = await renderHistoryBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
         await act(async () => {
             result.current.toggleFavorite('banana');
         });
@@ -220,7 +221,6 @@ describe('useHistoryBuilder', () => {
         getHistoryMock
             .mockResolvedValueOnce(['apple'])
             .mockResolvedValueOnce(['apple', 'banana']);
-
         const { result } = await renderHistoryBuilder();
         await waitFor(() => {
             expect(result.current.history).toEqual([
