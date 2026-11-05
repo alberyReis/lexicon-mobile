@@ -29,11 +29,13 @@ export const FavoritesScreen = () => {
             </View>
             {isPending ? (
                 <ActivityIndicator
+                    testID="favorites-loading"
                     size="large"
                     color={COLORS.secondary}
                 />
             ) : (
                 <FlatList
+                    testID="favorites-word-list"
                     data={favorites}
                     keyExtractor={(item) => item}
                     renderItem={({ item }) => (
