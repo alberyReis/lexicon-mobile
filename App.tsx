@@ -8,10 +8,10 @@ export const App = () => {
   useEffect(() => {
     initializeDatabase()
       .then(() => {
-        console.log('[SQLite] Banco inicializado com sucesso.');
+        console.log('[SQLite] Database initialized successfully.');
       })
       .catch((error: unknown) => {
-        console.error('[SQLite] Erro ao inicializar o banco:', error);
+        console.error('[SQLite] Database initialization failed:', error);
       });
   }, []);
 
