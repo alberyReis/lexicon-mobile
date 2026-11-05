@@ -5,6 +5,8 @@ export type IMainTabParamList = {
 };
 
 export type IRootStackParamList = {
+    Login: undefined;
+    Register: undefined;
     MainTabs: undefined;
     WordDetails: {
         word: string;
