@@ -31,11 +31,13 @@ export const HistoryScreen = () => {
             </View>
             {isPending ? (
                 <ActivityIndicator
+                    testID="history-loading"
                     size="large"
                     color={COLORS.secondary}
                 />
             ) : (
                 <FlatList
+                    testID="history-word-list"
                     data={history}
                     keyExtractor={(item) => item}
                     renderItem={({ item }) => (
