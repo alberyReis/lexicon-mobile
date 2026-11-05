@@ -48,7 +48,7 @@ describe('useFavoritesBuilder', () => {
         );
 
         await waitFor(() => {
-            expect(hook.result.current).not.toBeNull();
+            expect(hook.result.current.isPending).toBe(false);
         });
 
         return hook;
@@ -83,42 +83,44 @@ describe('useFavoritesBuilder', () => {
         toggleFavoriteMock.mockResolvedValue(false);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        await act(async () => {
+            await queryClient.cancelQueries();
+        });
+
         queryClient.clear();
     });
 
     it('should load favorite words', async () => {
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.favorites).toEqual([
-                'apple',
-                'banana',
-            ]);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
+        expect(result.current.favorites).toEqual([
+            'apple',
+            'banana',
+        ]);
         expect(getFavoritesMock).toHaveBeenCalledTimes(1);
+        await unmount();
     });
 
     it('should return an empty list when there are no favorites', async () => {
         getFavoritesMock.mockResolvedValue([]);
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
         expect(result.current.favorites).toEqual([]);
+        expect(result.current.isPending).toBe(false);
+        await unmount();
     });
 
     it('should expose an error when loading favorites fails', async () => {
         getFavoritesMock.mockRejectedValue(
             new Error('Database error'),
         );
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.isError).toBe(true);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
+        expect(result.current.isError).toBe(true);
+        expect(result.current.isPending).toBe(false);
+        await unmount();
     });
 
     it('should navigate to word details', async () => {
-        const { result } = await renderFavoritesBuilder();
+        const { result, unmount } = await renderFavoritesBuilder();
         await act(async () => {
             result.current.openWordDetails('apple');
         });
@@ -126,13 +128,11 @@ describe('useFavoritesBuilder', () => {
             'WordDetails',
             { word: 'apple' },
         );
+        await unmount();
     });
 
     it('should toggle a favorite word', async () => {
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
         await act(async () => {
             result.current.toggleFavorite('apple');
         });
@@ -142,19 +142,21 @@ describe('useFavoritesBuilder', () => {
                 expect.any(Object),
             );
         });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(false);
+        });
+        await unmount();
     });
 
     it('should invalidate favorites after toggling a word', async () => {
         getFavoritesMock
             .mockResolvedValueOnce(['apple', 'banana'])
             .mockResolvedValueOnce(['banana']);
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.favorites).toEqual([
-                'apple',
-                'banana',
-            ]);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
+        expect(result.current.favorites).toEqual([
+            'apple',
+            'banana',
+        ]);
         await act(async () => {
             result.current.toggleFavorite('apple');
         });
@@ -164,20 +166,18 @@ describe('useFavoritesBuilder', () => {
             ]);
         });
         expect(getFavoritesMock).toHaveBeenCalledTimes(2);
+        await unmount();
     });
 
     it('should expose the updating state during a mutation', async () => {
         let resolveMutation!: (value: boolean) => void;
         toggleFavoriteMock.mockImplementation(
             () =>
-                new Promise<boolean>((resolve) => {
+                new Promise<boolean>(resolve => {
                     resolveMutation = resolve;
                 }),
         );
-        const { result } = await renderFavoritesBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
+        const { result, unmount } = await renderFavoritesBuilder();
         await act(async () => {
             result.current.toggleFavorite('apple');
         });
@@ -190,5 +190,6 @@ describe('useFavoritesBuilder', () => {
         await waitFor(() => {
             expect(result.current.isUpdating).toBe(false);
         });
+        await unmount();
     });
 });
