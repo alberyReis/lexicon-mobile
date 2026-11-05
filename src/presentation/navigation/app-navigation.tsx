@@ -25,6 +25,7 @@ export const AppNavigation = () => {
                 }}
             >
                 <ActivityIndicator
+                    testID="auth-loading-indicator"
                     size="large"
                     color={COLORS.secondary}
                 />
@@ -45,7 +46,6 @@ export const AppNavigation = () => {
                             name="MainTabs"
                             component={MainTabNavigation}
                         />
-
                         <Stack.Screen
                             name="WordDetails"
                             component={WordDetailsScreen}
@@ -57,7 +57,6 @@ export const AppNavigation = () => {
                             name="Login"
                             component={LoginScreen}
                         />
-
                         <Stack.Screen
                             name="Register"
                             component={RegisterScreen}
