@@ -74,5 +74,9 @@ export const APP_STRINGS = {
             emailAlreadyInUse: 'Este e-mail já está cadastrado.',
             registerError: 'Não foi possível criar sua conta. Tente novamente.',
         },
+        logout: {
+            button: 'Sair da conta',
+            error: 'Não foi possível sair da conta. Tente novamente.',
+        },
     },
 } as const;
