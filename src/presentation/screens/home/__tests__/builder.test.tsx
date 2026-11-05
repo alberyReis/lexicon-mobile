@@ -52,8 +52,17 @@ describe('useHomeBuilder', () => {
             expect(hook.result.current).not.toBeNull();
         });
 
+        await waitFor(() => {
+            expect(queryClient.getQueryState(['words', ''])?.fetchStatus)
+                .toBe('idle');
+
+            expect(queryClient.getQueryState(['favorites'])?.fetchStatus)
+                .toBe('idle');
+        });
+
         return hook;
     };
+
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -108,9 +117,6 @@ describe('useHomeBuilder', () => {
 
     it('should search words using the provided term', async () => {
         const { result } = await renderHomeBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
         await act(async () => {
             result.current.setSearch('ban');
         });
@@ -121,7 +127,16 @@ describe('useHomeBuilder', () => {
                 'ban',
             );
         });
+        await waitFor(() => {
+            expect(
+                queryClient.getQueryState(['words', 'ban'])?.fetchStatus,
+            ).toBe('idle');
+        });
         expect(result.current.search).toBe('ban');
+        expect(result.current.words).toEqual([
+            'apple',
+            'banana',
+        ]);
     });
 
     it('should load the next page when available', async () => {
@@ -173,9 +188,6 @@ describe('useHomeBuilder', () => {
 
     it('should toggle a favorite word', async () => {
         const { result } = await renderHomeBuilder();
-        await waitFor(() => {
-            expect(result.current.isPending).toBe(false);
-        });
         await act(async () => {
             result.current.toggleFavorite('apple');
         });
@@ -184,6 +196,13 @@ describe('useHomeBuilder', () => {
                 'apple',
                 expect.any(Object),
             );
+        });
+        await waitFor(() => {
+            expect(
+                queryClient.isMutating({
+                    mutationKey: undefined,
+                }),
+            ).toBe(0);
         });
     });
 
