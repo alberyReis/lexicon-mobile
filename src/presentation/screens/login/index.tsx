@@ -83,6 +83,7 @@ export const LoginScreen = () => {
                             </Text>
                         ) : null}
                         <Pressable
+                            testID="login-button"
                             style={[
                                 styles.button,
                                 isLoading && styles.buttonDisabled,
