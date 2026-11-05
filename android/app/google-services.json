@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "352943455741",
+    "project_id": "lexicon-mobile-e9869",
+    "storage_bucket": "lexicon-mobile-e9869.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:352943455741:android:ff53abd4b3c7772a5e6d94",
+        "android_client_info": {
+          "package_name": "com.lexicon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzSZRuieMf35ahF3wmlQg2eYXQ66w3HFg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
