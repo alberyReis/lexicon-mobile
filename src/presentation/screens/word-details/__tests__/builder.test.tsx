@@ -239,7 +239,7 @@ describe('useWordDetailsBuilder', () => {
         await renderWordDetailsBuilder();
         await waitFor(() => {
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                '[History] Erro ao registrar palavra:',
+                '[History] Failed to register word:',
                 expect.any(Error),
             );
         });

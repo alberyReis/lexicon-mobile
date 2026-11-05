@@ -36,7 +36,7 @@ export const useWordDetailsBuilder = () => {
                     queryKey: ['history'],
                 });
             } catch (error) {
-                console.error('[History] Erro ao registrar palavra:', error);
+                console.error('[History] Failed to register word:', error);
             }
         };
 
