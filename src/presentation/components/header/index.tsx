@@ -8,6 +8,7 @@ export const Header = () => {
     return (
         <View style={styles.container}>
             <Image
+                testID="header-logo"
                 source={lexiconLogo}
                 style={styles.logo}
                 resizeMode="contain"
@@ -16,6 +17,7 @@ export const Header = () => {
                 <Typography variant="heading">
                     {APP_STRINGS.home.title}
                 </Typography>
+
                 <Typography variant="subtitle">
                     {APP_STRINGS.appSubtitle}
                 </Typography>
