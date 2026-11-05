@@ -106,6 +106,7 @@ export const RegisterScreen = () => {
                             </Text>
                         ) : null}
                         <Pressable
+                            testID="register-button"
                             style={[
                                 styles.button,
                                 isLoading && styles.buttonDisabled,
