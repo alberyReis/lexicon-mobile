@@ -106,26 +106,21 @@ describe('useHistoryBuilder', () => {
 
     it('should load viewed words', async () => {
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.history).toEqual([
                 'apple',
                 'banana',
             ]);
         });
-
         expect(getHistoryMock).toHaveBeenCalledTimes(1);
     });
 
     it('should return an empty list when history is empty', async () => {
         getHistoryMock.mockResolvedValue([]);
-
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.isPending).toBe(false);
         });
-
         expect(result.current.history).toEqual([]);
     });
 
@@ -133,9 +128,7 @@ describe('useHistoryBuilder', () => {
         getHistoryMock.mockRejectedValue(
             new Error('Database error'),
         );
-
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.isError).toBe(true);
         });
@@ -143,23 +136,19 @@ describe('useHistoryBuilder', () => {
 
     it('should load favorite words', async () => {
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.favorites).toEqual([
                 'apple',
             ]);
         });
-
         expect(getFavoritesMock).toHaveBeenCalledTimes(1);
     });
 
     it('should navigate to word details', async () => {
         const { result } = await renderHistoryBuilder();
-
         await act(async () => {
             result.current.openWordDetails('banana');
         });
-
         expect(navigateMock).toHaveBeenCalledWith(
             'WordDetails',
             { word: 'banana' },
@@ -168,15 +157,12 @@ describe('useHistoryBuilder', () => {
 
     it('should toggle a favorite word', async () => {
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.isPending).toBe(false);
         });
-
         await act(async () => {
             result.current.toggleFavorite('banana');
         });
-
         await waitFor(() => {
             expect(toggleFavoriteMock).toHaveBeenCalledWith(
                 'banana',
@@ -189,57 +175,45 @@ describe('useHistoryBuilder', () => {
         getFavoritesMock
             .mockResolvedValueOnce(['apple'])
             .mockResolvedValueOnce(['apple', 'banana']);
-
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.favorites).toEqual([
                 'apple',
             ]);
         });
-
         await act(async () => {
             result.current.toggleFavorite('banana');
         });
-
         await waitFor(() => {
             expect(result.current.favorites).toEqual([
                 'apple',
                 'banana',
             ]);
         });
-
         expect(getFavoritesMock).toHaveBeenCalledTimes(2);
     });
 
     it('should expose the updating state during a mutation', async () => {
         let resolveMutation!: (value: boolean) => void;
-
         toggleFavoriteMock.mockImplementation(
             () =>
                 new Promise<boolean>((resolve) => {
                     resolveMutation = resolve;
                 }),
         );
-
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.isPending).toBe(false);
         });
-
         await act(async () => {
             result.current.toggleFavorite('banana');
         });
-
         await waitFor(() => {
             expect(result.current.isUpdating).toBe(true);
         });
-
         await act(async () => {
             resolveMutation(false);
         });
-
         await waitFor(() => {
             expect(result.current.isUpdating).toBe(false);
         });
@@ -251,26 +225,22 @@ describe('useHistoryBuilder', () => {
             .mockResolvedValueOnce(['apple', 'banana']);
 
         const { result } = await renderHistoryBuilder();
-
         await waitFor(() => {
             expect(result.current.history).toEqual([
                 'apple',
             ]);
         });
-
         await act(async () => {
             await queryClient.invalidateQueries({
                 queryKey: ['history'],
             });
         });
-
         await waitFor(() => {
             expect(result.current.history).toEqual([
                 'apple',
                 'banana',
             ]);
         });
-
         expect(getHistoryMock).toHaveBeenCalledTimes(2);
     });
 });
