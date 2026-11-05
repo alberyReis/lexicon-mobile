@@ -1,4 +1,3 @@
-
 import type { ReactNode } from 'react';
 import {
     act,
@@ -10,9 +9,7 @@ import {
     QueryClientProvider,
 } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
-
 import { container } from '@/dependency-injection/container';
-
 import { useHistoryBuilder } from '../builder';
 
 jest.mock('@react-navigation/native', () => ({
