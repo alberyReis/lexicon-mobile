@@ -40,11 +40,13 @@ export const HomeScreen = () => {
             </View>
             {isPending ? (
                 <ActivityIndicator
+                    testID="home-loading"
                     size="large"
                     color={COLORS.secondary}
                 />
             ) : (
                 <FlatList
+                    testID="home-word-list"
                     data={words}
                     keyExtractor={(item) => item}
                     renderItem={({ item }) => (
@@ -66,6 +68,7 @@ export const HomeScreen = () => {
                     ListFooterComponent={
                         isFetchingNextPage ? (
                             <ActivityIndicator
+                                testID="home-pagination-loading"
                                 size="small"
                                 color={COLORS.secondary}
                             />
