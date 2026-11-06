@@ -60,9 +60,9 @@ export const firebaseAuthRepository: IAuthRepository = {
             callback(
                 user
                     ? {
-                          uid: user.uid,
-                          email: user.email,
-                      }
+                        uid: user.uid,
+                        email: user.email,
+                    }
                     : null,
             );
         });
