@@ -1,97 +1,196 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Lexicon
 
-# Getting Started
+Aplicativo de dicionário de inglês desenvolvido em **React Native e TypeScript**, com listagem paginada de palavras, consulta de definições, favoritos e histórico vinculados à conta do usuário.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+> This is a challenge by [Coodesh](https://coodesh.com/).
 
-## Step 1: Start Metro
+## Funcionalidades
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- Listagem de palavras em inglês com rolagem infinita e busca.
+- Consulta de palavras, definições, exemplos e representação fonética pela [Free Dictionary API](https://dictionaryapi.dev/).
+- Adição e remoção de palavras dos favoritos.
+- Histórico de palavras visualizadas.
+- Cadastro e autenticação de usuários com Firebase Authentication.
+- Persistência de favoritos e histórico por usuário no Cloud Firestore.
+- Cache de consultas com TanStack Query.
+- Vocabulário local em SQLite, com aproximadamente **370.100 palavras**.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+**Escopo atual:** a aplicação foi desenvolvida e testada no **Android**. A versão iOS ainda não foi validada. A reprodução de áudio não foi implementada (recurso opcional do desafio).
 
-```sh
-# Using npm
+## Tecnologias
+
+| Área | Tecnologias |
+| --- | --- |
+| Aplicação | React Native 0.88.1, React 19.3.0, TypeScript |
+| Navegação | React Navigation (Native Stack e Bottom Tabs) |
+| Estado | Redux Toolkit, React Redux |
+| Requisições e cache | Axios, TanStack Query |
+| Autenticação | Firebase Authentication |
+| Persistência remota | Cloud Firestore |
+| Persistência local | React Native Nitro SQLite, Nitro Modules |
+| Interface | Lucide React Native, React Native SVG |
+| Testes | Jest, React Native Testing Library |
+
+## Arquitetura
+
+O projeto organiza responsabilidades em camadas inspiradas na **Clean Architecture**:
+
+```text
+src/
+├── application/          # Casos de uso e regras de aplicação
+├── domain/               # Entidades e conceitos do domínio
+├── infrastructure/       # API, banco de dados e repositórios
+├── presentation/         # Telas, componentes e navegação
+├── shared/               # Constantes e utilitários compartilhados
+├── types/                # Tipos TypeScript
+└── dependency-injection/ # Composição e injeção de dependências
+```
+
+Nas telas, a lógica de estado, consultas, eventos e navegação fica concentrada em `builder.ts`; o `index.tsx` é responsável pela composição visual.
+
+## Investigação e decisões técnicas
+
+### 1. Origem do vocabulário
+
+**Problema:** a Free Dictionary API permite consultar palavras individualmente, mas não fornece um endpoint para listar todo o vocabulário.
+
+**Alternativas avaliadas:** carregar um arquivo JSON em memória, hospedar as palavras no Firebase ou utilizar um banco de dados local.
+
+**Decisão:** utilizar uma base SQLite pré-populada a partir do conjunto público [dwyl/english-words](https://github.com/dwyl/english-words), com cerca de 370.100 palavras. Isso permite consultas locais e paginação sem transferir todo o vocabulário de um serviço remoto a cada uso.
+
+### 2. Definições e fonética
+
+**Decisão:** consultar a [Free Dictionary API](https://dictionaryapi.dev/) somente quando for necessário obter os detalhes de uma palavra. A API fornece significados, exemplos e, quando disponíveis, dados fonéticos.
+
+### 3. Cache das requisições
+
+**Problema:** consultas repetidas à mesma palavra poderiam gerar chamadas desnecessárias.
+
+**Decisão:** utilizar TanStack Query, com chaves de consulta específicas por palavra. O cache reduz solicitações redundantes e permite controlar quando os dados devem ser considerados desatualizados.
+
+### 4. Dados associados ao usuário
+
+**Problema:** favoritos e histórico precisam pertencer à conta autenticada.
+
+**Decisão:** utilizar Firebase Authentication para autenticação e Cloud Firestore para persistência dos dados associados ao identificador do usuário.
+
+### 5. Separação de responsabilidades
+
+**Decisão:** separar apresentação, casos de uso, domínio e infraestrutura, com composição de dependências centralizada. Os *builders* encapsulam a lógica das telas para reduzir o acoplamento entre interface e comportamento.
+
+## Pré-requisitos
+
+Para executar a versão Android, configure:
+
+- **Node.js 22.11.0 ou superior** e npm.
+- **JDK** compatível com a versão do Android Gradle Plugin utilizada no projeto.
+- **Android Studio**, Android SDK e um emulador Android ou dispositivo físico com depuração USB habilitada.
+- Variáveis de ambiente do Android SDK (`ANDROID_HOME` e caminhos de ferramentas, conforme seu sistema).
+- Um projeto Firebase com **Authentication** e **Cloud Firestore** configurados.
+
+Consulte a documentação oficial de [configuração do ambiente React Native](https://reactnative.dev/docs/set-up-your-environment) para instalar e validar as ferramentas do Android.
+
+## Instalação e configuração
+
+### 1. Clonar o repositório
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd lexicon-mobile
+```
+
+Substitua `<URL_DO_REPOSITORIO>` pelo endereço real do projeto no GitHub.
+
+### 2. Instalar as dependências
+
+```bash
+npm install
+```
+
+Se o repositório incluir `package-lock.json`, prefira `npm ci` para reproduzir as versões registradas no arquivo de lock.
+
+### 3. Configurar o Firebase no Android
+
+1. Crie ou selecione um projeto no [Firebase Console](https://console.firebase.google.com/).
+2. Registre um aplicativo Android usando o **applicationId** configurado no projeto.
+3. Baixe o arquivo `google-services.json` do aplicativo Android registrado.
+4. Coloque o arquivo em `android/app/google-services.json`.
+5. Habilite o método de autenticação por **e-mail e senha** no Firebase Authentication.
+6. Crie o banco Cloud Firestore e configure as regras de segurança adequadas para os dados dos usuários.
+
+> **Atenção:** o arquivo `google-services.json` deve corresponder ao `applicationId` real do aplicativo. Verifique também se o projeto Android já possui a configuração necessária do plugin Google Services. Não use regras abertas do Firestore em produção.
+
+### 4. Verificar o banco local
+
+O aplicativo utiliza uma base SQLite pré-populada para a listagem de palavras. Confirme que o arquivo de banco utilizado pela inicialização do aplicativo está presente no local esperado pelo código e foi incluído no repositório ou disponibilizado por um procedimento de geração documentado.
+
+## Como executar o projeto no Android
+
+**1.** Abra um emulador pelo Android Studio ou conecte um dispositivo Android com depuração USB ativada.
+
+**2.** Na raiz do projeto, inicie o Metro Bundler:
+
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+**3.** Mantenha o Metro em execução e, em **outro terminal**, instale e abra o aplicativo:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+```bash
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+Na primeira execução, o Gradle poderá baixar dependências e a compilação poderá levar alguns minutos. Nas execuções seguintes, basta iniciar o emulador/dispositivo, o Metro e o aplicativo novamente.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+Se houver problemas de ambiente, execute:
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```bash
+npx react-native doctor
 ```
 
-Then, and every time you update your native dependencies, run:
+## Testes
 
-```sh
-bundle exec pod install
+Executar os testes automatizados:
+
+```bash
+npm test -- --runInBand
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Gerar o relatório de cobertura:
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+```bash
+npm test -- --coverage --runInBand
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+**Resultado registrado durante o desenvolvimento:** 40 suítes aprovadas, 391 testes aprovados e 100% de cobertura nas métricas exibidas pelo relatório Jest (instruções, ramificações, funções e linhas). A cobertura se refere aos arquivos incluídos na coleta de cobertura configurada no projeto; não substitui testes manuais em dispositivo.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Requisitos e limitações
 
-## Step 3: Modify your app
+| Recurso | Situação |
+| --- | --- |
+| Listagem com rolagem infinita | Implementado |
+| Detalhes, significados e fonética | Implementado |
+| Favoritos | Implementado |
+| Histórico de visualizações | Implementado |
+| Cache de requisições | Implementado |
+| Autenticação | Implementado |
+| Persistência vinculada ao usuário | Implementado |
+| Injeção de dependências | Implementado |
+| Testes automatizados | Implementado |
+| Reprodução de áudio | Não implementado (opcional) |
+| Validação no iOS | Pendente |
 
-Now that you have successfully run the app, let's make changes!
+O layout foi adaptado a partir do wireframe fornecido, preservando as funcionalidades principais, com navegação por abas e apresentação em lista.
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## Referências
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+- [Free Dictionary API](https://dictionaryapi.dev/)
+- [dwyl/english-words](https://github.com/dwyl/english-words)
+- [React Native](https://reactnative.dev/)
+- [Firebase](https://firebase.google.com/docs)
+- [TanStack Query](https://tanstack.com/query/latest)
+- [Coodesh](https://coodesh.com/)
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+---
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+**Desafio técnico:** This is a challenge by [Coodesh](https://coodesh.com/).
