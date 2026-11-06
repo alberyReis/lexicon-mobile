@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Platform } from 'react-native';
 import { APP_STRINGS } from '@/shared/constants/app-strings';
 import { useLoginBuilder } from '../builder';
 import { LoginScreen } from '../index';
@@ -31,10 +32,7 @@ const createBuilderMock = (
 describe('LoginScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-
-        useLoginBuilderMock.mockReturnValue(
-            createBuilderMock(),
-        );
+        useLoginBuilderMock.mockReturnValue(createBuilderMock());
     });
 
     it('should render the login title and subtitle', async () => {
@@ -99,9 +97,7 @@ describe('LoginScreen', () => {
             ),
             'test@example.com',
         );
-        expect(setEmailMock).toHaveBeenCalledWith(
-            'test@example.com',
-        );
+        expect(setEmailMock).toHaveBeenCalledWith('test@example.com');
     });
 
     it('should update the password when typing', async () => {
@@ -112,9 +108,7 @@ describe('LoginScreen', () => {
             ),
             'password123',
         );
-        expect(setPasswordMock).toHaveBeenCalledWith(
-            'password123',
-        );
+        expect(setPasswordMock).toHaveBeenCalledWith('password123');
     });
 
     it('should configure the email input correctly', async () => {
@@ -122,9 +116,7 @@ describe('LoginScreen', () => {
         const emailInput = screen.getByPlaceholderText(
             APP_STRINGS.auth.login.emailPlaceholder,
         );
-        expect(emailInput.props.keyboardType).toBe(
-            'email-address',
-        );
+        expect(emailInput.props.keyboardType).toBe('email-address');
         expect(emailInput.props.autoCapitalize).toBe('none');
         expect(emailInput.props.autoCorrect).toBe(false);
         expect(emailInput.props.autoComplete).toBe('email');
@@ -135,6 +127,7 @@ describe('LoginScreen', () => {
         const passwordInput = screen.getByPlaceholderText(
             APP_STRINGS.auth.login.passwordPlaceholder,
         );
+
         expect(passwordInput.props.secureTextEntry).toBe(true);
         expect(passwordInput.props.autoComplete).toBe('password');
     });
@@ -163,9 +156,7 @@ describe('LoginScreen', () => {
             }),
         );
         await render(<LoginScreen />);
-        expect(
-            screen.getByText(errorMessage),
-        ).toBeTruthy();
+        expect(screen.getByText(errorMessage)).toBeTruthy();
     });
 
     it('should not display an error when there is no error', async () => {
@@ -227,7 +218,9 @@ describe('LoginScreen', () => {
         );
         await render(<LoginScreen />);
         const loginButton = screen.getByTestId('login-button');
-        expect(loginButton.props.accessibilityState?.disabled).toBe(true);
+        expect(
+            loginButton.props.accessibilityState?.disabled,
+        ).toBe(true);
         fireEvent.press(loginButton);
         expect(handleLoginMock).not.toHaveBeenCalled();
     });
@@ -253,5 +246,41 @@ describe('LoginScreen', () => {
         expect(
             screen.getByText(APP_STRINGS.auth.login.signUp),
         ).toBeTruthy();
+    });
+
+    it('should render the login screen on iOS', async () => {
+        const originalPlatform = Platform.OS;
+        try {
+            Platform.OS = 'ios';
+            await render(<LoginScreen />);
+            expect(
+                screen.getByText(APP_STRINGS.auth.login.title),
+            ).toBeTruthy();
+            expect(
+                screen.getByPlaceholderText(
+                    APP_STRINGS.auth.login.emailPlaceholder,
+                ),
+            ).toBeTruthy();
+        } finally {
+            Platform.OS = originalPlatform;
+        }
+    });
+
+    it('should render the login screen on Android', async () => {
+        const originalPlatform = Platform.OS;
+        try {
+            Platform.OS = 'android';
+            await render(<LoginScreen />);
+            expect(
+                screen.getByText(APP_STRINGS.auth.login.title),
+            ).toBeTruthy();
+            expect(
+                screen.getByPlaceholderText(
+                    APP_STRINGS.auth.login.passwordPlaceholder,
+                ),
+            ).toBeTruthy();
+        } finally {
+            Platform.OS = originalPlatform;
+        }
     });
 });

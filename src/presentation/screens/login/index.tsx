@@ -28,6 +28,7 @@ export const LoginScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView
+                testID="login-keyboard-avoiding-view"
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >

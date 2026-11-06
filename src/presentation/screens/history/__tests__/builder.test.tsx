@@ -38,9 +38,11 @@ jest.mock('@/infrastructure/repositories/firebase-auth-repository', () => ({
 const getHistoryMock = jest.mocked(container.getHistory);
 const getFavoritesMock = jest.mocked(container.getFavorites);
 const toggleFavoriteMock = jest.mocked(container.toggleFavorite);
+
 const getCurrentUserMock = jest.mocked(
     firebaseAuthRepository.getCurrentUser,
 );
+
 const useNavigationMock = jest.mocked(useNavigation);
 
 describe('useHistoryBuilder', () => {
@@ -218,7 +220,6 @@ describe('useHistoryBuilder', () => {
         getFavoritesMock
             .mockResolvedValueOnce(['apple'])
             .mockResolvedValueOnce(['apple', 'banana']);
-
         const { result } = await renderHistoryBuilder();
         await waitFor(() => {
             expect(result.current.favorites).toEqual([
@@ -269,6 +270,7 @@ describe('useHistoryBuilder', () => {
         getHistoryMock
             .mockResolvedValueOnce(['apple'])
             .mockResolvedValueOnce(['apple', 'banana']);
+
         const { result } = await renderHistoryBuilder();
         await waitFor(() => {
             expect(result.current.history).toEqual([
@@ -312,7 +314,6 @@ describe('useHistoryBuilder', () => {
                 'apple',
                 'banana',
             ]);
-
             expect(result.current.favorites).toEqual([
                 'apple',
             ]);
@@ -337,5 +338,53 @@ describe('useHistoryBuilder', () => {
                 QUERY_KEYS.favorites('another-user'),
             ),
         ).toBeUndefined();
+    });
+
+    it('should not toggle favorites without an authenticated user', async () => {
+        getCurrentUserMock.mockReturnValue(null);
+        const { result } = await renderHook(
+            () => useHistoryBuilder(),
+            {
+                wrapper: createWrapper(),
+            },
+        );
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        expect(toggleFavoriteMock).not.toHaveBeenCalled();
+        expect(getHistoryMock).not.toHaveBeenCalled();
+        expect(getFavoritesMock).not.toHaveBeenCalled();
+    });
+
+    it('should not invalidate favorites when a mutation succeeds without a user ID', async () => {
+        let resolveMutation!: (value: boolean) => void;
+        toggleFavoriteMock.mockImplementation(
+            () =>
+                new Promise<boolean>(resolve => {
+                    resolveMutation = resolve;
+                }),
+        );
+        const invalidateQueriesSpy = jest.spyOn(
+            queryClient,
+            'invalidateQueries',
+        );
+        const { result, rerender } = await renderHistoryBuilder();
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(true);
+        });
+        getCurrentUserMock.mockReturnValue(null);
+        await act(async () => {
+            rerender({});
+        });
+        await act(async () => {
+            resolveMutation(false);
+        });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(false);
+        });
+        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
     });
 });

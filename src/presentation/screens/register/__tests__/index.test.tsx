@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Platform } from 'react-native';
 import { APP_STRINGS } from '@/shared/constants/app-strings';
 import { useRegisterBuilder } from '../builder';
 import { RegisterScreen } from '../index';
@@ -297,5 +298,41 @@ describe('RegisterScreen', () => {
         expect(
             screen.getByText(APP_STRINGS.auth.register.signIn),
         ).toBeTruthy();
+    });
+
+    it('should render the registration screen on iOS', async () => {
+        const originalPlatform = Platform.OS;
+        try {
+            Platform.OS = 'ios';
+            await render(<RegisterScreen />);
+            expect(
+                screen.getByText(APP_STRINGS.auth.register.title),
+            ).toBeTruthy();
+            expect(
+                screen.getByPlaceholderText(
+                    APP_STRINGS.auth.register.emailPlaceholder,
+                ),
+            ).toBeTruthy();
+        } finally {
+            Platform.OS = originalPlatform;
+        }
+    });
+
+    it('should render the registration screen on Android', async () => {
+        const originalPlatform = Platform.OS;
+        try {
+            Platform.OS = 'android';
+            await render(<RegisterScreen />);
+            expect(
+                screen.getByText(APP_STRINGS.auth.register.title),
+            ).toBeTruthy();
+            expect(
+                screen.getByPlaceholderText(
+                    APP_STRINGS.auth.register.confirmPasswordPlaceholder,
+                ),
+            ).toBeTruthy();
+        } finally {
+            Platform.OS = originalPlatform;
+        }
     });
 });

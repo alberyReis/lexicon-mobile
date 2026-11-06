@@ -40,9 +40,11 @@ jest.mock('@/infrastructure/repositories/firebase-auth-repository', () => ({
 const getWordsMock = jest.mocked(container.getWords);
 const getFavoritesMock = jest.mocked(container.getFavorites);
 const toggleFavoriteMock = jest.mocked(container.toggleFavorite);
+
 const getCurrentUserMock = jest.mocked(
     firebaseAuthRepository.getCurrentUser,
 );
+
 const useNavigationMock = jest.mocked(useNavigation);
 
 describe('useHomeBuilder', () => {
@@ -127,19 +129,18 @@ describe('useHomeBuilder', () => {
 
     afterEach(async () => {
         await cleanup();
+        await queryClient.cancelQueries();
         queryClient.clear();
     });
 
     it('should load the first page of words', async () => {
         const { result } = await renderHomeBuilder();
-
         await waitFor(() => {
             expect(result.current.words).toEqual([
                 'apple',
                 'banana',
             ]);
         });
-
         expect(getWordsMock).toHaveBeenCalledWith(
             null,
             20,
@@ -328,5 +329,54 @@ describe('useHomeBuilder', () => {
                 QUERY_KEYS.favorites('another-user'),
             ),
         ).toBeUndefined();
+    });
+
+    it('should not toggle favorites without an authenticated user', async () => {
+        getCurrentUserMock.mockReturnValue(null);
+        const { result } = await renderHook(
+            () => useHomeBuilder(),
+            {
+                wrapper: createWrapper(),
+            },
+        );
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        expect(toggleFavoriteMock).not.toHaveBeenCalled();
+        expect(getFavoritesMock).not.toHaveBeenCalled();
+        expect(result.current.favorites).toEqual([]);
+    });
+
+    it('should not invalidate favorites when a mutation succeeds without a user ID', async () => {
+        let resolveMutation!: (value: boolean) => void;
+        toggleFavoriteMock.mockImplementation(
+            () =>
+                new Promise<boolean>(resolve => {
+                    resolveMutation = resolve;
+                }),
+        );
+        const invalidateQueriesSpy = jest.spyOn(
+            queryClient,
+            'invalidateQueries',
+        );
+        const { result, rerender } = await renderHomeBuilder();
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        await waitFor(() => {
+            expect(queryClient.isMutating()).toBe(1);
+        });
+        getCurrentUserMock.mockReturnValue(null);
+        await act(async () => {
+            rerender({});
+        });
+        await act(async () => {
+            resolveMutation(true);
+        });
+        await waitFor(() => {
+            expect(queryClient.isMutating()).toBe(0);
+        });
+        expect(toggleFavoriteMock).toHaveBeenCalledTimes(1);
+        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
     });
 });

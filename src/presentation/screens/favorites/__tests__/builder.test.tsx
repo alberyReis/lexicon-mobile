@@ -36,9 +36,11 @@ jest.mock('@/infrastructure/repositories/firebase-auth-repository', () => ({
 
 const getFavoritesMock = jest.mocked(container.getFavorites);
 const toggleFavoriteMock = jest.mocked(container.toggleFavorite);
+
 const getCurrentUserMock = jest.mocked(
     firebaseAuthRepository.getCurrentUser,
 );
+
 const useNavigationMock = jest.mocked(useNavigation);
 
 describe('useFavoritesBuilder', () => {
@@ -246,5 +248,53 @@ describe('useFavoritesBuilder', () => {
                 QUERY_KEYS.favorites('another-user'),
             ),
         ).toBeUndefined();
+    });
+
+    it('should not toggle favorites without an authenticated user', async () => {
+        getCurrentUserMock.mockReturnValue(null);
+        const { result } = await renderHook(
+            () => useFavoritesBuilder(),
+            {
+                wrapper: createWrapper(),
+            },
+        );
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        expect(toggleFavoriteMock).not.toHaveBeenCalled();
+        expect(getFavoritesMock).not.toHaveBeenCalled();
+        expect(result.current.favorites).toEqual([]);
+    });
+
+    it('should not invalidate favorites when a mutation succeeds without a user ID', async () => {
+        let resolveMutation!: (value: boolean) => void;
+        toggleFavoriteMock.mockImplementation(
+            () =>
+                new Promise<boolean>(resolve => {
+                    resolveMutation = resolve;
+                }),
+        );
+        const invalidateQueriesSpy = jest.spyOn(
+            queryClient,
+            'invalidateQueries',
+        );
+        const { result, rerender } = await renderFavoritesBuilder();
+        await act(async () => {
+            result.current.toggleFavorite('apple');
+        });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(true);
+        });
+        getCurrentUserMock.mockReturnValue(null);
+        await act(async () => {
+            rerender({});
+        });
+        await act(async () => {
+            resolveMutation(false);
+        });
+        await waitFor(() => {
+            expect(result.current.isUpdating).toBe(false);
+        });
+        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
     });
 });
