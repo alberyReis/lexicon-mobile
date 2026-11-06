@@ -23,7 +23,7 @@ Aplicativo de dicionário de inglês desenvolvido em **React Native e TypeScript
 | --- | --- |
 | Aplicação | React Native 0.88.1, React 19.3.0, TypeScript |
 | Navegação | React Navigation (Native Stack e Bottom Tabs) |
-| Estado | Redux Toolkit, React Redux |
+| Estado local | React Hooks, com lógica de tela encapsulada nos `builder.ts` |
 | Requisições e cache | Axios, TanStack Query |
 | Autenticação | Firebase Authentication |
 | Persistência remota | Cloud Firestore |
@@ -46,7 +46,7 @@ src/
 └── dependency-injection/ # Composição e injeção de dependências
 ```
 
-Nas telas, a lógica de estado, consultas, eventos e navegação fica concentrada em `builder.ts`; o `index.tsx` é responsável pela composição visual.
+Nas telas, o estado local, as consultas, os eventos e a navegação ficam concentrados em `builder.ts`; o `index.tsx` é responsável pela composição visual. O projeto **não utiliza Redux nem uma store de estado global**. O TanStack Query gerencia o cache e o estado das consultas assíncronas, sem substituir o estado local dos componentes.
 
 ## Investigação e decisões técnicas
 
@@ -74,7 +74,11 @@ Nas telas, a lógica de estado, consultas, eventos e navegação fica concentrad
 
 **Decisão:** utilizar Firebase Authentication para autenticação e Cloud Firestore para persistência dos dados associados ao identificador do usuário.
 
-### 5. Separação de responsabilidades
+### 5. Gerenciamento de estado
+
+**Decisão:** utilizar React Hooks para estado local e TanStack Query para dados assíncronos e cache. Não foi necessário adotar Redux ou implementar uma store global, pois as responsabilidades de cada tela permanecem encapsuladas nos respectivos *builders*.
+
+### 6. Separação de responsabilidades
 
 **Decisão:** separar apresentação, casos de uso, domínio e infraestrutura, com composição de dependências centralizada. Os *builders* encapsulam a lógica das telas para reduzir o acoplamento entre interface e comportamento.
 
