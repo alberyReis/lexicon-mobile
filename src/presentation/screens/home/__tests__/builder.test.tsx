@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
     act,
+    cleanup,
     renderHook,
     waitFor,
 } from '@testing-library/react-native';
@@ -10,11 +11,15 @@ import {
 } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { container } from '@/dependency-injection/container';
+import { firebaseAuthRepository } from '@/infrastructure/repositories/firebase-auth-repository';
+import { QUERY_KEYS } from '@/shared/constants/query-keys';
 import { useHomeBuilder } from '../builder';
 
 jest.mock('@react-navigation/native', () => ({
     useNavigation: jest.fn(),
 }));
+
+jest.mock('@react-native-firebase/auth', () => ({}));
 
 jest.mock('@/dependency-injection/container', () => ({
     container: {
@@ -24,13 +29,31 @@ jest.mock('@/dependency-injection/container', () => ({
     },
 }));
 
+jest.mock('@/infrastructure/repositories/firebase-auth-repository', () => ({
+    firebaseAuthRepository: {
+        getCurrentUser: jest.fn(),
+        onAuthStateChanged: jest.fn(),
+        signOut: jest.fn(),
+    },
+}));
+
 const getWordsMock = jest.mocked(container.getWords);
 const getFavoritesMock = jest.mocked(container.getFavorites);
 const toggleFavoriteMock = jest.mocked(container.toggleFavorite);
+const getCurrentUserMock = jest.mocked(
+    firebaseAuthRepository.getCurrentUser,
+);
 const useNavigationMock = jest.mocked(useNavigation);
 
 describe('useHomeBuilder', () => {
     let queryClient: QueryClient;
+
+    const userId = 'user-123';
+
+    const authenticatedUser = {
+        uid: userId,
+        email: 'test@example.com',
+    };
 
     const createWrapper = () => {
         return ({ children }: { children: ReactNode }) => (
@@ -53,25 +76,30 @@ describe('useHomeBuilder', () => {
         });
 
         await waitFor(() => {
-            expect(queryClient.getQueryState(['words', ''])?.fetchStatus)
-                .toBe('idle');
+            expect(
+                queryClient.getQueryState(
+                    QUERY_KEYS.words(''),
+                )?.fetchStatus,
+            ).toBe('idle');
 
-            expect(queryClient.getQueryState(['favorites'])?.fetchStatus)
-                .toBe('idle');
+            expect(
+                queryClient.getQueryState(
+                    QUERY_KEYS.favorites(userId),
+                )?.fetchStatus,
+            ).toBe('idle');
         });
 
         return hook;
     };
 
-
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
 
         queryClient = new QueryClient({
             defaultOptions: {
                 queries: {
                     retry: false,
-                    gcTime: 0,
+                    gcTime: Infinity,
                 },
                 mutations: {
                     retry: false,
@@ -83,23 +111,35 @@ describe('useHomeBuilder', () => {
             navigate: jest.fn(),
         } as never);
 
-        getWordsMock.mockResolvedValue(['apple', 'banana']);
+        getCurrentUserMock.mockReturnValue(
+            authenticatedUser,
+        );
+
+        getWordsMock.mockResolvedValue([
+            'apple',
+            'banana',
+        ]);
+
         getFavoritesMock.mockResolvedValue([]);
+
         toggleFavoriteMock.mockResolvedValue(true);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        await cleanup();
         queryClient.clear();
     });
 
     it('should load the first page of words', async () => {
         const { result } = await renderHomeBuilder();
+
         await waitFor(() => {
             expect(result.current.words).toEqual([
                 'apple',
                 'banana',
             ]);
         });
+
         expect(getWordsMock).toHaveBeenCalledWith(
             null,
             20,
@@ -129,14 +169,18 @@ describe('useHomeBuilder', () => {
         });
         await waitFor(() => {
             expect(
-                queryClient.getQueryState(['words', 'ban'])?.fetchStatus,
+                queryClient.getQueryState(
+                    QUERY_KEYS.words('ban'),
+                )?.fetchStatus,
             ).toBe('idle');
         });
+        await waitFor(() => {
+            expect(result.current.words).toEqual([
+                'apple',
+                'banana',
+            ]);
+        });
         expect(result.current.search).toBe('ban');
-        expect(result.current.words).toEqual([
-            'apple',
-            'banana',
-        ]);
     });
 
     it('should load the next page when available', async () => {
@@ -147,7 +191,6 @@ describe('useHomeBuilder', () => {
         getWordsMock
             .mockResolvedValueOnce(firstPage)
             .mockResolvedValueOnce(['word20']);
-
         const { result } = await renderHomeBuilder();
         await waitFor(() => {
             expect(result.current.hasNextPage).toBe(true);
@@ -176,7 +219,7 @@ describe('useHomeBuilder', () => {
         expect(getWordsMock).toHaveBeenCalledTimes(1);
     });
 
-    it('should load favorite words', async () => {
+    it('should load favorite words for the authenticated user', async () => {
         getFavoritesMock.mockResolvedValue(['apple']);
         const { result } = await renderHomeBuilder();
         await waitFor(() => {
@@ -184,6 +227,16 @@ describe('useHomeBuilder', () => {
                 'apple',
             ]);
         });
+        expect(getFavoritesMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                queryKey: QUERY_KEYS.favorites(userId),
+            }),
+        );
+        expect(
+            queryClient.getQueryData(
+                QUERY_KEYS.favorites(userId),
+            ),
+        ).toEqual(['apple']);
     });
 
     it('should toggle a favorite word', async () => {
@@ -194,15 +247,13 @@ describe('useHomeBuilder', () => {
         await waitFor(() => {
             expect(toggleFavoriteMock).toHaveBeenCalledWith(
                 'apple',
-                expect.any(Object),
+                expect.objectContaining({
+                    client: expect.any(Object),
+                }),
             );
         });
         await waitFor(() => {
-            expect(
-                queryClient.isMutating({
-                    mutationKey: undefined,
-                }),
-            ).toBe(0);
+            expect(queryClient.isMutating()).toBe(0);
         });
     });
 
@@ -223,6 +274,11 @@ describe('useHomeBuilder', () => {
             ]);
         });
         expect(getFavoritesMock).toHaveBeenCalledTimes(2);
+        expect(
+            queryClient.getQueryData(
+                QUERY_KEYS.favorites(userId),
+            ),
+        ).toEqual(['apple']);
     });
 
     it('should expose the navigation object', async () => {
@@ -242,5 +298,35 @@ describe('useHomeBuilder', () => {
         await waitFor(() => {
             expect(result.current.isError).toBe(true);
         });
+    });
+
+    it('should not fetch favorites without an authenticated user', async () => {
+        getCurrentUserMock.mockReturnValue(null);
+        const { result } = await renderHook(
+            () => useHomeBuilder(),
+            {
+                wrapper: createWrapper(),
+            },
+        );
+        await waitFor(() => {
+            expect(result.current.isPending).toBe(false);
+        });
+        expect(getFavoritesMock).not.toHaveBeenCalled();
+        expect(result.current.favorites).toEqual([]);
+    });
+
+    it('should keep favorites cached under the authenticated user ID', async () => {
+        getFavoritesMock.mockResolvedValue(['apple']);
+        await renderHomeBuilder();
+        expect(
+            queryClient.getQueryData(
+                QUERY_KEYS.favorites(userId),
+            ),
+        ).toEqual(['apple']);
+        expect(
+            queryClient.getQueryData(
+                QUERY_KEYS.favorites('another-user'),
+            ),
+        ).toBeUndefined();
     });
 });

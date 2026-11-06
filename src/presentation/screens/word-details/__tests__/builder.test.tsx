@@ -14,6 +14,8 @@ import {
     useRoute,
 } from '@react-navigation/native';
 import { container } from '@/dependency-injection/container';
+import { firebaseAuthRepository } from '@/infrastructure/repositories/firebase-auth-repository';
+import { QUERY_KEYS } from '@/shared/constants/query-keys';
 import { useWordDetailsBuilder } from '../builder';
 
 jest.mock('@react-navigation/native', () => ({
@@ -30,13 +32,26 @@ jest.mock('@/dependency-injection/container', () => ({
     },
 }));
 
+jest.mock('@/infrastructure/repositories/firebase-auth-repository', () => ({
+    firebaseAuthRepository: {
+        getCurrentUser: jest.fn(),
+    },
+}));
+
 const getWordDetailsMock = jest.mocked(
     container.getWordDetails.execute,
 );
 
 const addToHistoryMock = jest.mocked(container.addToHistory);
+
+const getCurrentUserMock = jest.mocked(
+    firebaseAuthRepository.getCurrentUser,
+);
+
 const useNavigationMock = jest.mocked(useNavigation);
 const useRouteMock = jest.mocked(useRoute);
+
+const mockUid = 'user-123';
 
 describe('useWordDetailsBuilder', () => {
     let queryClient: QueryClient;
@@ -129,6 +144,11 @@ describe('useWordDetailsBuilder', () => {
             },
         } as never);
 
+        getCurrentUserMock.mockReturnValue({
+            uid: mockUid,
+            email: 'test@example.com',
+        });
+
         getWordDetailsMock.mockResolvedValue(wordDetails);
         addToHistoryMock.mockResolvedValue(undefined);
     });
@@ -179,7 +199,7 @@ describe('useWordDetailsBuilder', () => {
         expect(addToHistoryMock).toHaveBeenCalledTimes(1);
     });
 
-    it('should invalidate history after registering a word', async () => {
+    it('should invalidate user history after registering a word', async () => {
         const invalidateQueriesSpy = jest.spyOn(
             queryClient,
             'invalidateQueries',
@@ -187,9 +207,25 @@ describe('useWordDetailsBuilder', () => {
         await renderWordDetailsBuilder();
         await waitFor(() => {
             expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-                queryKey: ['history'],
+                queryKey: QUERY_KEYS.history(mockUid),
             });
         });
+    });
+
+    it('should not register history without an authenticated user', async () => {
+        getCurrentUserMock.mockReturnValue(null);
+        const { result } = await renderHook(
+            () => useWordDetailsBuilder(),
+            {
+                wrapper: createWrapper(),
+            },
+        );
+        await waitFor(() => {
+            expect(result.current.wordDetails).toEqual(
+                wordDetails[0],
+            );
+        });
+        expect(addToHistoryMock).not.toHaveBeenCalled();
     });
 
     it('should expose an error when fetching word details fails', async () => {

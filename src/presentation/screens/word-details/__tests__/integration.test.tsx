@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+    cleanup,
     renderHook,
     waitFor,
 } from '@testing-library/react-native';
@@ -11,19 +12,16 @@ import {
     useNavigation,
     useRoute,
 } from '@react-navigation/native';
-import { database } from '@/infrastructure/database/database';
 import { container } from '@/dependency-injection/container';
+import { historyRepository } from '@/infrastructure/repositories/history/history-repository-implementation';
+import { firebaseAuthRepository } from '@/infrastructure/repositories/firebase-auth-repository';
+import { QUERY_KEYS } from '@/shared/constants/query-keys';
+
 import { useWordDetailsBuilder } from '../builder';
 
 jest.mock('@react-navigation/native', () => ({
     useNavigation: jest.fn(),
     useRoute: jest.fn(),
-}));
-
-jest.mock('@/infrastructure/database/database', () => ({
-    database: {
-        executeAsync: jest.fn(),
-    },
 }));
 
 jest.mock(
@@ -35,12 +33,67 @@ jest.mock(
     }),
 );
 
-const executeAsyncMock = jest.mocked(database.executeAsync);
+jest.mock(
+    '@/infrastructure/repositories/word-list/word-list-repository-implementation',
+    () => ({
+        wordListRepository: {
+            getWords: jest.fn(),
+        },
+    }),
+);
+
+jest.mock(
+    '@/infrastructure/repositories/favorite/favorite-repository-implementation',
+    () => ({
+        favoriteRepository: {
+            getFavorites: jest.fn(),
+            addFavorite: jest.fn(),
+            removeFavorite: jest.fn(),
+            isFavorite: jest.fn(),
+        },
+    }),
+);
+
+jest.mock(
+    '@/infrastructure/repositories/history/history-repository-implementation',
+    () => ({
+        historyRepository: {
+            getHistory: jest.fn(),
+            addToHistory: jest.fn(),
+            clearHistory: jest.fn(),
+        },
+    }),
+);
+
+jest.mock(
+    '@/infrastructure/repositories/firebase-auth-repository',
+    () => ({
+        firebaseAuthRepository: {
+            getCurrentUser: jest.fn(),
+        },
+    }),
+);
+
 const useNavigationMock = jest.mocked(useNavigation);
 const useRouteMock = jest.mocked(useRoute);
 
+const getCurrentUserMock = jest.mocked(
+    firebaseAuthRepository.getCurrentUser,
+);
+
+const getHistoryMock = jest.mocked(
+    historyRepository.getHistory,
+);
+
+const addToHistoryMock = jest.mocked(
+    historyRepository.addToHistory,
+);
+
+const mockUid = 'user-123';
+
 describe('History Integration', () => {
     let queryClient: QueryClient;
+    let timestamp: number;
 
     const history = new Map<string, number>();
 
@@ -78,6 +131,7 @@ describe('History Integration', () => {
         jest.clearAllMocks();
 
         history.clear();
+        timestamp = 3000;
 
         queryClient = new QueryClient({
             defaultOptions: {
@@ -101,53 +155,28 @@ describe('History Integration', () => {
             },
         } as never);
 
+        getCurrentUserMock.mockReturnValue({
+            uid: mockUid,
+            email: 'test@example.com',
+        });
+
         jest.spyOn(
             container.getWordDetails,
             'execute',
         ).mockResolvedValue([]);
 
-        executeAsyncMock.mockImplementation(
-            async (query, params) => {
-                const sql = query.trim();
+        getHistoryMock.mockImplementation(async () => {
+            return getOrderedHistory();
+        });
 
-                if (
-                    sql.includes('SELECT word') &&
-                    sql.includes('FROM history')
-                ) {
-                    return {
-                        rows: {
-                            _array: getOrderedHistory().map((word) => ({
-                                word,
-                            })),
-                        },
-                    } as unknown as Awaited<
-                        ReturnType<typeof database.executeAsync>
-                    >;
-                }
-
-                if (sql.includes('INSERT INTO history')) {
-                    const word = params?.[0] as string;
-                    const viewedAt = params?.[1] as number;
-
-                    history.set(word, viewedAt);
-                }
-
-                if (sql.includes('DELETE FROM history')) {
-                    history.clear();
-                }
-
-                return {
-                    rows: {
-                        _array: [],
-                    },
-                } as unknown as Awaited<
-                    ReturnType<typeof database.executeAsync>
-                >;
-            },
-        );
+        addToHistoryMock.mockImplementation(async word => {
+            timestamp += 1000;
+            history.set(word, timestamp);
+        });
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        await cleanup();
         queryClient.clear();
         jest.restoreAllMocks();
     });
@@ -157,10 +186,7 @@ describe('History Integration', () => {
         await waitFor(() => {
             expect(history.has('apple')).toBe(true);
         });
-        expect(executeAsyncMock).toHaveBeenCalledWith(
-            expect.stringContaining('INSERT INTO history'),
-            ['apple', expect.any(Number)],
-        );
+        expect(addToHistoryMock).toHaveBeenCalledWith('apple');
     });
 
     it('should persist history through the repository', async () => {
@@ -170,6 +196,7 @@ describe('History Integration', () => {
         });
         const words = await container.getHistory();
         expect(words).toEqual(['apple']);
+        expect(getHistoryMock).toHaveBeenCalled();
     });
 
     it('should update the timestamp without duplicating a word', async () => {
@@ -193,7 +220,7 @@ describe('History Integration', () => {
         expect(words).toEqual(['apple', 'banana']);
     });
 
-    it('should invalidate the history query after registering a word', async () => {
+    it('should invalidate the user history query after registering a word', async () => {
         const invalidateQueriesSpy = jest.spyOn(
             queryClient,
             'invalidateQueries',
@@ -201,7 +228,7 @@ describe('History Integration', () => {
         await renderWordDetailsBuilder();
         await waitFor(() => {
             expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-                queryKey: ['history'],
+                queryKey: QUERY_KEYS.history(mockUid),
             });
         });
     });
@@ -211,8 +238,8 @@ describe('History Integration', () => {
         const consoleErrorSpy = jest
             .spyOn(console, 'error')
             .mockImplementation(() => { });
-        executeAsyncMock.mockRejectedValueOnce(
-            new Error('Database error'),
+        addToHistoryMock.mockRejectedValueOnce(
+            new Error('Firestore error'),
         );
         await renderWordDetailsBuilder();
         await waitFor(() => {

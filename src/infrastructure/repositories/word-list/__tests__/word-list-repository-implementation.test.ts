@@ -4,6 +4,7 @@ import { wordListRepository } from '../word-list-repository-implementation';
 jest.mock('@/infrastructure/database/database', () => ({
     database: {
         executeAsync: jest.fn(),
+        executeSync: jest.fn(),
     },
 }));
 
